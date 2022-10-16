@@ -16,6 +16,7 @@ import {
   Text,
   useColorScheme,
   View,
+  ActivityIndicator
 } from 'react-native';
 
 import {
@@ -35,7 +36,7 @@ import {
   VictoryCandlestick,
   VictoryLabel
 } from 'victory-native';
-
+import DateRange from './DateRange';
 import { Dimensions, Platform } from 'react-native';
 
 const { height, width } = Dimensions.get('window');
@@ -102,8 +103,13 @@ const CandlestickChart = ({children, title}): Node => {
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       horizontal
-      style={styles.backgroundStyle}>
-      {candleData?.length > 0 && (
+      contentContainerStyle={styles.container}>
+      {candleData?.length > 0 ? (
+        <View>
+          <View style={{zIndex : 1000}}>
+          <DateRange />
+          </View>
+          
         <VictoryChart
         theme={VictoryTheme.material}
         domainPadding={{ x: 25 }}
@@ -121,10 +127,19 @@ const CandlestickChart = ({children, title}): Node => {
         />
        
         <VictoryCandlestick
-          candleColors={{ positive: '#336d16', negative: '#ff0000' }}
+          candleColors={{ positive: 'green', negative: 'red' }}
+          candleRatio={1}
+          animate={{
+            duration: 2000,
+            onLoad: { duration: 1000 }
+          }}
           data={candleData}
         />
       </VictoryChart>
+     
+      </View>
+      
+
     //     <VictoryChart
     //     theme={VictoryTheme.material}
     //     //domainPadding={{ x: 25 }}
@@ -151,15 +166,18 @@ const CandlestickChart = ({children, title}): Node => {
         //     data={candleData}
         //   />
         // </VictoryChart>
-      )}
+      )
+     :
+     <ActivityIndicator size="large" />
+     }
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex : 1,
+    justifyContent : 'center'
   },
   sectionTitle: {
     fontSize: 24,
