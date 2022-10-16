@@ -1,0 +1,20 @@
+diff --git a/node_modules/react-native-daterange-picker/src/index.js b/node_modules/react-native-daterange-picker/src/index.js
+index 38517d4..cd52992 100644
+--- a/node_modules/react-native-daterange-picker/src/index.js
++++ b/node_modules/react-native-daterange-picker/src/index.js
+@@ -21,6 +21,7 @@ const DateRangePicker = ({
+   startDate,
+   endDate,
+   onChange,
++  onClosePicker,
+   displayedDate,
+   minDate,
+   date,
+@@ -104,6 +105,7 @@ const DateRangePicker = ({
+         endDate: startDate,
+       });
+     }
++    onClosePicker && onClosePicker();
+   };
+ 
+   const previousMonth = () => {

@@ -37,13 +37,16 @@ import {
   VictoryLabel
 } from 'victory-native';
 import DateRange from './DateRange';
+import Interval from './Interval';
 import { Dimensions, Platform } from 'react-native';
+import INTERVAL from '../Constans.js';
 
 const { height, width } = Dimensions.get('window');
 const CandlestickChart = ({children, title}): Node => {
   const dispatch = useDispatch();
   const data = useSelector(state => state.apiReducer.data);
   const loading = useSelector(state => state.apiReducer.loading);
+
   const addWeekToDate = (dateObj) => {
     dateObj.setDate(dateObj.getDate() - 7);
     return dateObj.getTime();
@@ -53,24 +56,22 @@ const CandlestickChart = ({children, title}): Node => {
     dateObj.setMonth(dateObj.getMonth() - 1);
     return dateObj.getTime();
   }
+
   const [state, setState] = useState({
     fromTimestamp: '1633381200',//new Date().getTime().toString(),
     toTimestamp: '1664917199',//addMonthToDate(new Date()).toString(),
-    interval: '1d',
+    interval: INTERVAL.DAY,
   });
 
   const [candleData, setCandleData] = useState([]);
+  const [rangeChanged, setRangeChanged] = useState(false);
 
   const _setState = _state => {
     setState({...state, ..._state});
   };
 
   useEffect(() => {
-    dispatch(
-      getDataApi(
-        `https://query1.finance.yahoo.com/v7/finance/download/SPUS?&period1=${state?.fromTimestamp}&period2=${state?.toTimestamp}&interval=${state?.interval}&events=history&crumb=5YTX%2FgVGBmg`,
-      ),
-    );
+    sendApi();
   }, []);
 
   useEffect(() => {
@@ -95,9 +96,23 @@ const CandlestickChart = ({children, title}): Node => {
   const isDarkMode = useColorScheme() === 'dark';
   console.log('candleData', candleData);
 
+  const sendApi = () => {
+    dispatch(
+      getDataApi(
+        `https://query1.finance.yahoo.com/v7/finance/download/SPUS?&period1=${state?.fromTimestamp}&period2=${state?.toTimestamp}&interval=${state?.interval}&events=history&crumb=5YTX%2FgVGBmg`,
+      ),
+    );
+  }
+
  
 
+const setPeriods = (fromTimestamp , toTimestamp) => {
+  _setState({fromTimestamp , toTimestamp});
+}
 
+const setInterval = (interval) => {
+  _setState({interval});
+}
 
   return (
     <ScrollView
@@ -107,9 +122,9 @@ const CandlestickChart = ({children, title}): Node => {
       {candleData?.length > 0 ? (
         <View>
           <View style={{zIndex : 1000}}>
-          <DateRange />
+          <DateRange onClosePicker={setPeriods}/>
           </View>
-          
+          <Interval interval={state?.interval} setInterval={setInterval}/>
         <VictoryChart
         theme={VictoryTheme.material}
         domainPadding={{ x: 25 }}
