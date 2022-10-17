@@ -2,17 +2,6 @@ import React from 'react';
 import { View, Button, Colors } from 'react-native-ui-lib';
 import INTERVAL from '../Constans.js';
 
-const IntervalItem = ({ label, selected, onPress }) => {
-    return (
-        <Button
-            label={label}
-            outlineColor={Colors.red10}
-            backgroundColor={selected ? Colors.red10 : 'white'}
-            color={selected ? 'white' : Colors.red10}
-            onPress={onPress}
-        />
-    );
-}
 const Interval = ({ interval, setInterval }) => {
     return (
         <View row spread marginH-20>
@@ -34,5 +23,17 @@ const Interval = ({ interval, setInterval }) => {
         </View>
     );
 };
+
+const IntervalItem = ({ label, selected, onPress }) => {
+    return (
+        <Button
+            label={label}
+            outlineColor={Colors.red10}
+            backgroundColor={selected ? Colors.red10 : 'white'}
+            color={selected ? 'white' : Colors.red10}
+            onPress={onPress}
+        />
+    );
+}
 
 export default Interval;

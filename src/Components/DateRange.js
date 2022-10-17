@@ -3,30 +3,19 @@ import { View, Text } from 'react-native-ui-lib';
 import moment from "moment";
 import DateRangePicker from "react-native-daterange-picker";
 
-const DateRange = ({onClosePicker}) => {
-    const [state, setState] = useState({
-        startDate: moment(),
-        endDate: moment().add(1, 'M'),
-        displayedDate: moment(),
-    });
-
-    const _setState = _state => {
-        setState({ ...state, ..._state });
-    };
-
-    const setDates = (dates) => {
-        _setState({
-            ...dates,
-        });
-    };
-
+const DateRange = ({state , setDates, onClosePicker}) => {
+ 
     return (
         <DateRangePicker
             onChange={setDates}
             endDate={state?.endDate}
             startDate={state?.startDate}
             displayedDate={state?.displayedDate}
-            onClosePicker={() => onClosePicker(state?.startDate , state?.endDate)}
+            onClosePicker={() => {
+                console.log('state?.startDate',state?.startDate);
+                console.log('state?.startDate',moment(state?.startDate).unix());
+                onClosePicker(moment(state?.startDate).unix() , moment(state?.endDate).unix());
+            }}
             range
         >
             <View padding-20>

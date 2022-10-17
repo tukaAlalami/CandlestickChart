@@ -1,73 +1,60 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
-import React, {useEffect, useState} from 'react';
-import type {Node} from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
   View,
   ActivityIndicator
 } from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-import {useDispatch, useSelector} from 'react-redux';
+import { Text } from 'react-native-ui-lib';
+import { useDispatch, useSelector } from 'react-redux';
 import getDataApi from '../Api/ApiController';
 import {
   VictoryAxis,
   VictoryChart,
   VictoryTheme,
-  VictoryCandlestick,
-  VictoryLabel
+  VictoryCandlestick
 } from 'victory-native';
 import DateRange from './DateRange';
 import Interval from './Interval';
-import { Dimensions, Platform } from 'react-native';
+import { Dimensions } from 'react-native';
 import INTERVAL from '../Constans.js';
+import moment from 'moment';
 
-const { height, width } = Dimensions.get('window');
-const CandlestickChart = ({children, title}): Node => {
+const { width } = Dimensions.get('window');
+
+const CandlestickChart = () => {
   const dispatch = useDispatch();
-  const data = useSelector(state => state.apiReducer.data);
-  const loading = useSelector(state => state.apiReducer.loading);
 
-  const addWeekToDate = (dateObj) => {
-    dateObj.setDate(dateObj.getDate() - 7);
-    return dateObj.getTime();
-  }
-  
-  const addMonthToDate = (dateObj) => {
-    dateObj.setMonth(dateObj.getMonth() - 1);
-    return dateObj.getTime();
-  }
+  const { data, loading, error } = useSelector(({ apiReducer }) => ({
+    data: apiReducer.data,
+    loading: apiReducer.loading,
+    error: apiReducer.error,
+  }));
+
+  const [candleData, setCandleData] = useState([]);
 
   const [state, setState] = useState({
-    fromTimestamp: '1633381200',//new Date().getTime().toString(),
-    toTimestamp: '1664917199',//addMonthToDate(new Date()).toString(),
+    fromTimestamp: moment().subtract(1, 'Y').unix(),//'1633381200',
+    toTimestamp: moment().unix(),//'1664917199',
     interval: INTERVAL.DAY,
   });
 
-  const [candleData, setCandleData] = useState([]);
-  const [rangeChanged, setRangeChanged] = useState(false);
-
   const _setState = _state => {
-    setState({...state, ..._state});
+    setState({ ...state, ..._state });
+  };
+  const [rangeState, setRangeState] = useState({
+    startDate: moment().subtract(1, 'Y'),
+    endDate: moment(),
+    displayedDate: moment(),
+  });
+
+  const _setRangeState = _rangeState => {
+    setRangeState({ ...rangeState, ..._rangeState });
+  };
+
+  const setDates = (dates) => {
+    _setRangeState({
+      ...dates,
+    });
   };
 
   useEffect(() => {
@@ -75,28 +62,26 @@ const CandlestickChart = ({children, title}): Node => {
   }, []);
 
   useEffect(() => {
+    let temp = [];
     if (!!data) {
-      let temp = [];
       let arr = data.split('\n');
       for (let i = 1; i < arr.length; i++) {
         let item = arr[i].split(',');
         let date = item[0].split('-');
         temp.push({
-          x: new Date(date[0], date[1], date[2]),
+          x: new Date(item[0]),
           open: item[1],
           high: item[2],
           low: item[3],
           close: item[4],
         });
       }
-      setCandleData(temp);
     }
+    setCandleData(temp);
   }, [data]);
 
-  const isDarkMode = useColorScheme() === 'dark';
-  console.log('candleData', candleData);
-
   const sendApi = () => {
+    console.log('sendApi', state);
     dispatch(
       getDataApi(
         `https://query1.finance.yahoo.com/v7/finance/download/SPUS?&period1=${state?.fromTimestamp}&period2=${state?.toTimestamp}&interval=${state?.interval}&events=history&crumb=5YTX%2FgVGBmg`,
@@ -104,108 +89,71 @@ const CandlestickChart = ({children, title}): Node => {
     );
   }
 
- 
+  useMemo(() => {
+    sendApi();
+  }, [state]);
 
-const setPeriods = (fromTimestamp , toTimestamp) => {
-  _setState({fromTimestamp , toTimestamp});
-}
 
-const setInterval = (interval) => {
-  _setState({interval});
-}
+  const setPeriods = (fromTimestamp, toTimestamp) => {
+    _setState({ fromTimestamp, toTimestamp });
+  }
+
+  const setInterval = (interval) => {
+    _setState({ interval });
+  }
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      horizontal
-      contentContainerStyle={styles.container}>
-      {candleData?.length > 0 ? (
+    <View
+      style={styles.container}>
+      {loading ?
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ActivityIndicator size="large" />
+        </View> :
         <View>
-          <View style={{zIndex : 1000}}>
-          <DateRange onClosePicker={setPeriods}/>
+          <View style={{ zIndex: 1000 }}>
+            <DateRange state={rangeState} setDates={setDates} onClosePicker={setPeriods} />
           </View>
-          <Interval interval={state?.interval} setInterval={setInterval}/>
-        <VictoryChart
-        theme={VictoryTheme.material}
-        domainPadding={{ x: 25 }}
-        scale={{ x: 'time' }}
-        width={width}
-        
-      >
-        <VictoryAxis
-          scale='time'
-          tickCount={9}
-          tickFormat={(t) => `${t.toISOString().slice(5, 10)}`}
-          fixLabelOverlap
-          style={{ tickLabels: { fontSize: 8 } }}
-         
-        />
-       
-        <VictoryCandlestick
-          candleColors={{ positive: 'green', negative: 'red' }}
-          candleRatio={1}
-          animate={{
-            duration: 2000,
-            onLoad: { duration: 1000 }
-          }}
-          data={candleData}
-        />
-      </VictoryChart>
-     
-      </View>
-      
+          <Interval interval={state?.interval} setInterval={setInterval} />
+          {!!error ?
+            <View style={styles.errorView}>
+              <Text center red20 text70>{error ?? ''}</Text>
+            </View>
+            :
+            <VictoryChart
+              theme={VictoryTheme.material}
+              domainPadding={{ x: 25 }}
+              scale={{ x: 'time' }}
+              width={width}
+            >
+              <VictoryAxis
+                scale='time'
+                tickFormat={(t) => `${t.toISOString().slice(0, 10)}`}
+                fixLabelOverlap
+                style={{ tickLabels: { fontSize: 8 } }}
 
-    //     <VictoryChart
-    //     theme={VictoryTheme.material}
-    //     //domainPadding={{ x: 25 }}
-    //     scale={{ x: 'time' }}
-    //     width={800}
-    //   >
-    //   <VictoryAxis tickCount={50} tickFormat={t =>  `${t.toISOString().slice(5, 10)}`}/>
-    
-    //     <VictoryCandlestick
-    //     scale={{ x: 'time' }}
-    //       candleColors={{ positive: '#336d16', negative: '#ff0000' }}
-    //       candleRatio={1}
-    //      // domainPadding={{x: [-10, 10]}}
-    //       data={candleData}
-    //     />
-    //   </VictoryChart>
-        // <VictoryChart
-        //   theme={VictoryTheme.material}
-        //   //domainPadding={{x: 25}}
-        //   scale={{x: 'time'}}>
-        //   <VictoryAxis tickFormat={t =>  `${t.toISOString().slice(5, 10)}`}/>
-        //   <VictoryCandlestick
-        //     candleColors={{positive: '#5f5c5b', negative: '#c43a31'}}
-        //     data={candleData}
-        //   />
-        // </VictoryChart>
-      )
-     :
-     <ActivityIndicator size="large" />
-     }
-    </ScrollView>
+              />
+              <VictoryCandlestick
+                candleColors={{ positive: 'green', negative: 'red' }}
+                candleRatio={1}
+                data={candleData}
+              />
+            </VictoryChart>
+          }
+        </View>
+      }
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex : 1,
-    justifyContent : 'center'
+    flex: 1,
+    alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
+  errorView: {
+    width: width - 40,
+    margin: 20
+  }
 });
 
 export default CandlestickChart;

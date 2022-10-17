@@ -3,7 +3,7 @@ import ACTION_TYPES from './ActionTypes';
 const initialState = {
   loading: false,
   data: '',
-  error: '',
+  error: null,
 };
 
 const apiReducer = (state = initialState, action) => {
@@ -12,11 +12,14 @@ const apiReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: true,
+        data: '',
+        error: null,
       };
     case ACTION_TYPES.FETCH_DATA_SUCCESS:
       return {
         ...state,
         data: action.payload,
+        error: null,
         loading: false,
       };
     case ACTION_TYPES.FETCH_DATA_ERROR:
@@ -24,6 +27,7 @@ const apiReducer = (state = initialState, action) => {
         ...state,
         error: action.payload,
         loading: false,
+        data : ''
       };
 
     default:

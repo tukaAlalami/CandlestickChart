@@ -12,7 +12,6 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  Text,
   useColorScheme,
   View
 } from 'react-native';
@@ -25,8 +24,7 @@ import { Provider } from 'react-redux';
 import { store } from './src/Store';
 import CandlestickChart from './src/Components/CandlestickChart';
 import ReactNativeBiometrics from 'react-native-biometrics'
-
-
+import { Text } from 'react-native-ui-lib';
 
 const App: () => Node = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -35,7 +33,7 @@ const App: () => Node = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const [showChart, setShowChart] = useState(true);
+  const [showChart, setShowChart] = useState(false);
 
   const checkBiometrics = () => {
     const rnBiometrics = new ReactNativeBiometrics()
@@ -43,7 +41,7 @@ const App: () => Node = () => {
     rnBiometrics.simplePrompt({ promptMessage: 'Confirm fingerprint' })
       .then((resultObject) => {
         const { success } = resultObject
-        //setShowChart(success);
+        setShowChart(success);
         if (success) {
           console.log('successful biometrics provided')
 
@@ -52,24 +50,23 @@ const App: () => Node = () => {
         }
       })
       .catch(() => {
-       // setShowChart(false);
+        setShowChart(false);
         console.log('biometrics failed')
       })
   }
-
 
   useEffect(() => {
     checkBiometrics();
   }, []);
 
   return (
-    <SafeAreaView style={[{flex : 1} , backgroundStyle]}>
+    <SafeAreaView style={[{ flex: 1 }, backgroundStyle]}>
       <Provider store={store}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         {showChart ?
           <CandlestickChart />
           : <View style={styles.container}>
-            <Text>biometrics failed</Text>
+            <Text  center red20 text70>biometrics failed</Text>
           </View>
         }
       </Provider>
@@ -79,21 +76,9 @@ const App: () => Node = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex : 1,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
   },
 });
 
